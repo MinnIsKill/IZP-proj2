@@ -27,6 +27,10 @@ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
                         F5 -> DEBUG
 **/
 
+/** test inputs:    ./sps -d : tab.txt
+ *                  ./sps -d : arow tab.txt
+ *                  ./sps arow tab.txt
+**/
 
 /** REMCHAR
  * @brief remove called characters in called string
@@ -67,22 +71,26 @@ char *remdup(char string[], int n){
 /* behaves like strtok() except that it returns empty tokens also
     */
 char* strtok_alt(char *str, const char *delim){
-  static char *start = NULL; /* stores string str for consecutive calls */
-  char *token = NULL; /* found token */
-  /* assign new start in case */
-  if (str){
-      start = str;
-  }
-  /* check whether text to parse left */
-  if (!start) return NULL;
-  /* remember current start as found token */
-  token = start;
-  /* find next occurrence of delim */
-  start = strpbrk(start, delim);
-  /* replace delim with terminator and move start to follower */
-  if (start) *start++ = '\0';
-  /* done */
-  return token;
+    static char *start = NULL; /* stores string str for consecutive calls */
+    char *token = NULL; /* found token */
+    /* assign new start in case */
+    if (str){
+        start = str;
+    }
+    /* check whether text to parse left */
+    if (!start){
+        return NULL;
+    }
+    /* remember current start as found token */
+    token = start;
+    /* find next occurrence of delim */
+    start = strpbrk(start, delim);
+    /* replace delim with terminator and move start to follower */
+    if (start){
+        *start++ = '\0';
+    }
+    /* done */
+    return token;
 }
 
 /* Syntax spouštění: ./sps [-d DELIM] CMD_SEQUENCE FILE */
