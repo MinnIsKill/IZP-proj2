@@ -64,6 +64,27 @@ char *remdup(char string[], int n){
     return string;
 }
 
+/* behaves like strtok() except that it returns empty tokens also
+    */
+char* strtok_alt(char *str, const char *delim){
+  static char *start = NULL; /* stores string str for consecutive calls */
+  char *token = NULL; /* found token */
+  /* assign new start in case */
+  if (str){
+      start = str;
+  }
+  /* check whether text to parse left */
+  if (!start) return NULL;
+  /* remember current start as found token */
+  token = start;
+  /* find next occurrence of delim */
+  start = strpbrk(start, delim);
+  /* replace delim with terminator and move start to follower */
+  if (start) *start++ = '\0';
+  /* done */
+  return token;
+}
+
 /* Syntax spouštění: ./sps [-d DELIM] CMD_SEQUENCE FILE */
 
 /* Volitelně (usnadní pokročilý vývoj projektu, není třeba pro získání bodového hodnocení): Příkazy mohou být uloženy v textovém souboru. 
@@ -150,14 +171,14 @@ int main( int argc, char *argv[] )
     while (!feof(fd)) {
         if (fgets(buff, sizeof(buff), fd) != NULL) {
             printf("buff is %s\n",buff);
-            token = strtok(buff,&delim[0]);
+            token = strtok_alt(buff,&delim[0]);
             while( token != NULL ) { // POTŘEBUJU JEŠTĚ ZJISTIT JAK ODSTRANIT '\n', 
                                      //A JAK ZAJISTIT VYTVOŘENÍ BUŇKY KDYŽ JSOU DVA DELIMETERY VEDLE SEBE
                 printf( " %s\n", token);
                 //remchar(token, '\n'); //??????????? - nefunguje
                 options[row][cnt] = malloc(sizeof(MAX_SIZE));
                 strcpy(options[row][cnt], token);
-                token = strtok(NULL,&delim[0]);
+                token = strtok_alt(NULL,&delim[0]);
                 cnt++;
             }
             /**for (; buff[j] != '\n'; j++){
