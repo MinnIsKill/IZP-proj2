@@ -1,5 +1,5 @@
 /**
- * @file:   sheet.c | VUT FIT BRNO | project N.1 | IZP
+ * @file:   sheet.c | VUT FIT BRNO | project N.2 | IZP
  * @author: Vojtěch Kališ, (xkalis03@stud.fit.vutbr.cz)
  * @date:   29.11.2020
  **/
@@ -7,12 +7,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 #define MAX_ROW_LENGTH 10242
 #define MAX_SIZE 1024
 #define MAX 100
 
 
+/* Syntax spouštění: ./sps [-d DELIM] CMD_SEQUENCE FILE */
+
+/* Volitelně (usnadní pokročilý vývoj projektu, není třeba pro získání bodového hodnocení): Příkazy mohou být uloženy v textovém souboru. 
+Každý příkaz bude oddělen znakem konce řádku. Soubor s příkazy bude specifikován namísto sekvence příkazů jako argument: -cCOMMAND_FILE. */
+
+/// valgrind:       $ valgrind --leak-check=full --track-origins=yes ./sps [commands] tab.txt
 
 /**     LORD GIVE ME THE MENTAL CAPACITY TO REMEMBER THESE, but in the meantime, this cheatsheet should suffice.
 GitHub push flow:   $ git add .
@@ -27,10 +35,6 @@ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
                         F5 -> DEBUG
 **/
 
-/** test inputs:    ./sps -d : tab.txt
- *                  ./sps -d : arow tab.txt
- *                  ./sps arow tab.txt
-**/
 
 /** REMCHAR
  * @brief remove called characters in called string
@@ -93,10 +97,7 @@ char* strtok_alt(char *str, const char *delim){
     return token;
 }
 
-/* Syntax spouštění: ./sps [-d DELIM] CMD_SEQUENCE FILE */
 
-/* Volitelně (usnadní pokročilý vývoj projektu, není třeba pro získání bodového hodnocení): Příkazy mohou být uloženy v textovém souboru. 
-Každý příkaz bude oddělen znakem konce řádku. Soubor s příkazy bude specifikován namísto sekvence příkazů jako argument: -cCOMMAND_FILE. */
 
 int main( int argc, char *argv[] )
 {
@@ -129,109 +130,376 @@ int main( int argc, char *argv[] )
     }
     return 0;
 }**/
-    int start = 2;
-
+    int start = 1;
     int row = 0;
+
+    int cnt = 0;
+    int cols = 0;
+    int rows = 0;
+
+    int working_row = 0;
+    int working_col = 0;
 
     char delim[MAX];    // array for delimiters
     strcpy(delim," ");
     int delim_len = 0;
 
-    //int cols = 0; //number of columns
-    //int curr_row = 0; //currently printed row
 
+/***********************************
+ *  ARGUMENTS PROCESSING SECTION   
+***********************************/
+
+/**
+ *  THIS LOADS AND WORKS WITH DELIM
+**/
     if (strcmp(argv[1], "-d") == 0){
         start++;
-        if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0 &&
-        strcmp(argv[2], "cset") != 0 && strcmp(argv[2], "tolower") != 0 && strcmp(argv[2], "toupper") != 0 && strcmp(argv[2], "round") != 0 && strcmp(argv[2], "int") != 0 && strcmp(argv[2], "copy") != 0 && strcmp(argv[2], "swap") != 0 && strcmp(argv[2], "move") != 0){
+        for (int i = 0; argv[2][i] != '\0';i++){
+            if (argv[2][i] == '\\' || argv[2][i] == '"'){
+                fprintf(stderr,"ERROR: Delim contains forbidden characters.\nThe program was stopped.\n");
+                exit(1);
+            }
+        }
+        if (argv[2][0] != '['){
             start++;
             strcpy(delim, argv[2]);
             delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
             remdup(delim, delim_len);                   // then remove any duplicate characters
             //strncpy(&delim_first[0], &delim[0], 1);
         } else {
-            fprintf(stderr,"It would appear the argument in place of the delimiter looks an awful lot like a command, setting it to default (space) instead. \nDid you perhaps forget to enter a delimiter? \n");
-            strcpy(delim," ");     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
+            fprintf(stderr,"ERROR: It would appear delimiter was called but no delimiters were specified, setting it to default (space) instead.\n");
+            strcpy(delim," "); //set delim to default
         }
     }
+
+
+
+
+
+
+
+
+
+
+/**
+ *  THIS LOADS AND WORKS WITH COMMANDS
+**/
+//NEZAPOMENOUT PŘI VÝBĚRU BUNĚK NA NASTAVENÍ 'COLS' (POČET SLOUPCŮ)
+
+/**
+ * !!!!!!!!!!!!!!!!!!!!!!! TAKHLE TO NEPŮJDE, MUSÍM ZKUSIT ULOŽIT SI ARGUMENTY JINAK
+ * 
+**/
+
+    /**char *args [MAX_SIZE][MAX_SIZE]; //2d arr for arguments
+    for (int i = 0; i < MAX_SIZE; i++){ // tohle je jen aby valgrind nekřičel
+        for (int j = 0; j < MAX_SIZE; j++){
+            args[i][j] = NULL;
+        }
+    }
+    int arg_row = 0;**/
+
+    //char args[MAX_SIZE];
+
+    char* token2 = NULL;
+
+    /**printf("argv[start] is %s\n",argv[start]);
+    token2 = strtok_alt(argv[start],";");
+    printf("!!! %s\n", token2);
+    token2 = strtok_alt(NULL,";");
+    printf("!!! %s\n", token2);**/
+
+    /**token2 = strtok_alt(argv[start],";");
+    while (token2 != NULL){
+        printf( " %s\n", token2); //delete this later, for now it serves as an auxiliary line to print what it loaded
+        //remchar(token, '\n'); //??????????? - nefunguje
+        
+        args[arg_row][0] = NULL;
+        args[arg_row][0] = malloc(strlen(token2)+2;
+        if (args[arg_row][0] == NULL){
+            printf("REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE (malloc error, should probably write something to deal with it)\n");
+        }
+
+
+        token2 = strtok_alt(NULL,";");
+        ++arg_row;
+    }
+
+    arg_row = 0;**/
+    token2 = NULL;
+    bool flag_comma = false;
+    int curr_char;
+    int occurences = 0;
+    //bool first = false;
+
+    token2 = strtok_alt(argv[start],";");
+    while (token2 != NULL){
+        if (strncmp(token2, "[",1) == 0){
+            for (int i = 0; token2[i] != '\0';i++){ //find number of ',' occurences in string
+                if (token2[i] == ','){
+                    ++occurences;
+                }
+            }
+            char *p = token2;
+            printf("argument for selection reached: %s\n",token2);
+            if (occurences < 2){
+                while (*p){
+                    char *tmp = strstr(token2,"min");
+                    if (tmp != 0){
+                        printf("min found\n");
+                        break;
+                    }
+                    tmp = strstr(token2,"max");
+                    if (tmp != 0){
+                        printf("max found\n");
+                        break;
+                    }
+                    if (*p == ','){
+                        flag_comma = true;
+                    }
+                    if (*p == ']'){
+                        break;
+                    }
+                    if (flag_comma != true){
+                        if (isdigit(*p)){
+                            working_row = strtol(p, &p, 10);
+                            printf ("working_row = %d\n",working_row);
+                        } else if (*p == '_'){
+                            working_row = -1;
+                            printf ("working_row = %d (all rows)\n",working_row);
+                            p++;
+                        } else {
+                            p++;
+                        }
+                    } else {
+                        if (isdigit(*p)){
+                            working_col = strtol(p, &p, 10);
+                            printf ("working_col = %d\n",working_col);
+                        } else if (*p == '_'){
+                            working_col = -1;
+                            printf ("working_col = %d (all cols)\n",working_col);
+                            p++;
+                        } else {
+                            p++;
+                        }
+                    }
+                    ++curr_char;
+                }
+            }
+        } else {
+            printf("other argument reached: %s\n",token2);
+        }
+        occurences = 0;
+        flag_comma = false;
+        token2 = strtok_alt(NULL,";");
+    }
+
+    /**token2 = strtok_alt(argv[start],";");
+    while (token2 != NULL){
+        if (first == false){
+            printf( " %s\n", token2); //delete this later, for now it serves as an auxiliary line to print what it loaded
+            strcpy(args, token2);
+            strcat(args, "\n");
+            token2 = strtok_alt(NULL,";");
+            first = true;
+        } else {
+            printf( " %s\n", token2); //delete this later, for now it serves as an auxiliary line to print what it loaded
+            //remchar(token, '\n'); //??????????? - nefunguje
+            strcat(args, token2);
+            strcat(args, "\n");
+            token2 = strtok_alt(NULL,";");
+        }
+    }**/
+
+    
+
+    //printf("args are:\n%s\n",args);
+
+
+    start++;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     FILE *fd;
-    int i = 0, j = 0;
-    char buff[1024];
-    char *options [MAX][MAX_ROW_LENGTH];
+    //int i = 0, j = 0;
+    int cells = 0;
+    char buff[1024]; //1d arr for line reading
+    //char comms[MAX][MAX]; //2d arr for commands
 
-    int test = 0;
-    //int col_num = 0;
-
-    char* token;
-
-    int cnt = 0;
-
-    i++; //ODSTRAN JAK BUDES POUZIVAT
-    j++;
-    test++;
-
-    printf("start is %d\n",start);
-    fd = fopen(argv[start], "r");
-    printf("delim is %s\n",delim);
-
-    while (!feof(fd)) {
-        if (fgets(buff, sizeof(buff), fd) != NULL) {
-            printf("buff is %s\n",buff);
-            token = strtok_alt(buff,&delim[0]);
-            while( token != NULL ) { // POTŘEBUJU JEŠTĚ ZJISTIT JAK ODSTRANIT '\n', 
-                                     //A JAK ZAJISTIT VYTVOŘENÍ BUŇKY KDYŽ JSOU DVA DELIMETERY VEDLE SEBE
-                printf( " %s\n", token);
-                //remchar(token, '\n'); //??????????? - nefunguje
-                options[row][cnt] = malloc(sizeof(MAX_SIZE));
-                strcpy(options[row][cnt], token);
-                token = strtok_alt(NULL,&delim[0]);
-                cnt++;
-            }
-            /**for (; buff[j] != '\n'; j++){
-                for (int k = 0; delim[k] != '\0'; k++){
-                    options[row][j] = malloc(sizeof(MAX_SIZE));
-                    sscanf(buff, "%s %s", options[row][j], options[row][j+1]);
-                    test = k;
-                }
-                options[row][j] = malloc(sizeof(MAX_SIZE));
-                sscanf(buff, "%s %s", options[row][j], options[row][j+1]);
-                
-                printf("j is %d\n",j);
-                printf("k is %d\n",test);
-                printf("buff[j] is %c\n",buff[j]);
-                printf("delim[k] is %c\n",delim[test]);
-                printf("delim is %s\n",delim);
-            }
-            if (buff[j] == '\n'){
-                printf("newline reached\n");
-            }**/
-            printf("row is %d\n",row);
-            cnt = 0;
-            ++row;
-            //j = 0;
+    char *tab [MAX][MAX_ROW_LENGTH]; //2d arr for lines to be stored into (already delim-separated into cells)
+    for (int i = 0; i < MAX; i++){ // tohle je jen aby valgrind nekřičel
+        for (int j = 0; j < MAX_ROW_LENGTH; j++){
+            tab[i][j] = NULL;
         }
     }
 
-    printf("options[0][0] is %s, options[0][1] is %s, options[0][2] is %s\noptions[1][0] is %s, options[1][1] is %s, options[1][2] is %s\noptions[2][0] is %s, options[2][1] is %s, options[2][2] is %s\n",options[0][0],options[0][1],options[0][2],options[1][0],options[1][1],options[1][2],options[2][0],options[2][1],options[2][2]);
+    //int test = 0;
+    //int col_num = 0;
 
-/**    int tmp = 0;
-    int tmp2 = row;
-    while (tmp2 >= 0) { //TOHLE asi ani nemusim menit protoze mi to tedka slouzi jenom ke kontrolnimu vypisu, ale w/e
-        tmp2--;
-        if (tmp2 < 0){
-            break;
+    char* token = NULL;
+    char tmp[1024];
+
+    //bool flag_endrow = false;
+
+    printf("start is %d\n",start);
+    fd = fopen(argv[start], "r");
+    // TODO: KONTROLA JESTLI SE SOUBOR OTEVREL
+    // ???TODO: KONTROLA JESTLI SOUBOR NENI PRAZDNY???
+    printf("delim is %s\n",delim);
+
+    while (!feof(fd)){
+        if (fgets(buff, sizeof(buff), fd) != NULL){
+            strcpy(tmp, buff);
+            token = strtok_alt(buff,&delim[0]);
+            if (token == tmp){
+                ++cells;
+            } else
+            while( token != NULL ) {
+                token = strtok_alt(NULL,&delim[0]);
+                ++cells;
+                ++cnt;
+            }
+            if (cnt > cols){
+                cols = cnt;
+            }
+            cnt = 0;
+            ++row;
+            ++rows;
         }
-        printf ("Cell[%i][%i] is %s, Cell[%i][%i] is %s\n", tmp, tmp2, options[tmp][tmp2], tmp, tmp2+1, options[tmp][tmp2+1]);
-    }**/
+    }
+
+    /**printf("\n=====================================\n");    
+    printf ("number of cells = %d\n",cells);
+    printf ("number of rows is %d\n",rows);
+    printf ("most columns is %d\n",cols);
+    printf("=====================================\n\n");**/
+    
+    row = 0;
+    cnt = 0;
+    rewind(fd);
+
+    while (!feof(fd)){
+        if (fgets(buff, sizeof(buff), fd) != NULL){
+            strcpy(tmp, buff);
+            token = strtok_alt(buff,&delim[0]);
+            if (token == tmp){
+                tab[row][cnt] = NULL;
+                tab[row][cnt] = malloc(strlen(token)+1);
+                if (tab[row][cnt] == NULL){
+                    printf("REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE (malloc error, should probably write something to deal with it)\n");
+                }
+                /**if (tab[row][cnt] == NULL){
+                    exit;
+                }**/
+                //printf("tab[%i][%i] == %s\n",row,cnt,tab[row][cnt]);
+            } else
+            while( token != NULL ) { // POTŘEBUJU JEŠTĚ ZJISTIT JAK ODSTRANIT '\n',     EDIT: mám to vůbec odstraňovat? ten '\n' by tam
+            // možná i měl zůstat, ne?)     EDIT2: no jo, ale co když přidám na konec každého řádku sloupec? ---> ANO, '\n' bych asi měl 
+            // odstranit a pak přidat do poslední buňky každého řádku
+                printf( " %s\n", token); //delete this later, for now it serves as an auxiliary line to print what it loaded
+                //remchar(token, '\n'); //??????????? - nefunguje
+                tab[row][cnt] = NULL;
+                tab[row][cnt] = malloc(strlen(token)+1);
+                if (tab[row][cnt] == NULL){
+                    printf("REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE (malloc error, should probably write something to deal with it)\n");
+                }
+                //printf("tab[%i][%i] == %s\n",row,cnt,tab[row][cnt]);
+                token = strtok_alt(NULL,&delim[0]);
+                ++cnt;
+            }
+            if (cnt > cols){
+                cols = cnt;
+            }
+            cnt = 0;
+            ++row;
+        }
+    }
+    
+    row = 0;
+    cnt = 0;
+    rewind(fd);
+
+    while (!feof(fd)){
+        if (fgets(buff, sizeof(buff), fd) != NULL){
+            printf("row is %d\n",row);
+            printf("buff is %s\n",buff);
+            strcpy(tmp, buff);
+            printf("tmp is %s\n",tmp);
+            token = strtok_alt(buff,&delim[0]);
+            printf("token is %s\n",token);
+            if (strcmp(token, tmp) == 0){
+                strncpy(tab[row][cnt], token, strlen(token)+1);
+                printf("tab[%i][%i] == %s\n",row,cnt,tab[row][cnt]);
+            } else
+            while( token != NULL ) { // POTŘEBUJU JEŠTĚ ZJISTIT JAK ODSTRANIT '\n',     EDIT: mám to vůbec odstraňovat? ten '\n' by tam
+            // možná i měl zůstat, ne?)     EDIT2: no jo, ale co když přidám na konec každého řádku sloupec? ---> ANO, '\n' bych asi měl 
+            // odstranit a pak přidat do poslední buňky každého řádku
+                printf( " %s\n", token); //delete this later, for now it serves as an auxiliary line to print what it loaded
+                //remchar(token, '\n'); //??????????? - nefunguje
+                strncpy(tab[row][cnt], token, strlen(token)+1); 
+                token = strtok_alt(NULL,&delim[0]);
+                ++cnt;
+            }
+            if (cnt > cols){
+                cols = cnt;
+            }
+            cnt = 0;
+            ++row;
+        }
+    }
 
 
+
+/**
+ *  SECTION FOR AUXILIARY PRINTS (DO NOT LEAVE IN FINAL FILE, OR AT LEAST HAVE IT BE COMMENTED OUT)
+**/
+
+    printf("\n=========================================\n");
+    for (int i = 0; i < rows; i++){
+        for (int j = 0; j < cols; j++){
+            printf("tab[%i][%i] == %s\n",i,j,tab[i][j]);
+        }
+    }
+    printf("=========================================\n");
+
+    printf("\n=========================================\n");
     printf ("\nargc is %i \n",argc);
-    printf ("argv[2] is %s \n",argv[2]);            //! REMEMBER TO
-    printf ("delim is %s \n",delim);                //! DELETE THESE
-    printf ("first delimiter, at delim[0], is %c \n",delim[0]);          //! LATER ON
-    printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
+    printf ("argv[2] is %s \n",argv[2]);
+    printf ("delim is %s \n",delim);
+    printf ("first delimiter, at delim[0], is %c \n",delim[0]);
+    printf ("delim[1] is %c \n",delim[1]);
+    printf ("number of non-null cells = %d\n",cells);
+    printf ("number of rows is %d\n",rows);
+    printf ("most columns is %d\n",cols);
+    printf("=========================================\n");
+
+/**
+ *  SECTION FOR MEMORY FREES (JUST DELETE THE PRINTING FROM FINAL FILE)
+**/
+// FREE WHOLE 'tab' ARRAY (TRY TO PUT THIS INTO A FUNCTION FOR BETTER READABILITY)
+    printf("\n=========================================\n");
+    for (int i = 0; i < rows; i++){
+        for (int j = 0; j < cols; j++){
+            printf("freeing tab[%i][%i] == %s\n",i,j,tab[i][j]);
+            free(tab[i][j]);
+        }
+    }
+    printf("=========================================\n");
+
+    //printf("got here\n");
 
     fclose(fd);
     return 0;
