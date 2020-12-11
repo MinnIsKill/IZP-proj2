@@ -1,0 +1,5 @@
+./sps -d :: '[_,_]' tab.txt
+./sps -d :: '[2,1];irow' tab.txt
+./sps -d :: '[1,2];[1,_];[_,1];[2,2,1,1];[1,1,2,-];[_,_];[min];[max];[find 15];[_];arow;[0,1];irow;acol' tab.txt
+./sps -d :: '[min];[1,2];[1,_];[_,1];[1,1,2,2];[1,1,2,-];[_,_];[min];[max];[find 15];[_];arow;[0,1];irow;acol' tab.txt
+./sps -d :: '[1,2];[1,_];[_,1];[1,1,2,2];[1,1,2,-];[_,_];[min];[max];[_,_];[find 42];[_];arow;[0,1];irow;acol' tab.txt

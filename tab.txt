@@ -1,3 +1,4 @@
-Bill::Gates 15000000
-Franta Odvedle 15
-Pepik Ajtak 42
+1.87502e+06::Gates 15000000 :haha
+Franta Odvedle 15:::
+Pepik : Ajtak 42::
+Pepik Jozef:::
